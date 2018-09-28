@@ -9,41 +9,43 @@ import * as zlib from 'zlib';
 import path from 'path';
 import fs from 'fs';
 
+const l = console.log
+const REPO = 'https://github.com/insomniatest/insomniatest.git';
+const USER = 'insomniatest';
+const PASS = 'ins0mniatest';
+const remote = `https://${USER}:${PASS}@${REPO}`;
+
 const repoDir = path.join(__dirname, '..', '..', '..', '..', '..', '..', 'testGitRepo');
-console.log('<><><>>>><', repoDir);
+l('<><><>>>><', repoDir);
 const simpleGit = require('simple-git');
 
-const git = simpleGit(repoDir);
-git.pwd(repoDir);
-git.checkIsRepo(isRepo => {
-  if (!isRepo) git.init();
-});
-git
-  .env({
+const git = simpleGit(repoDir)
+git.checkIsRepo((e, isRepo) => {
+    l('isRepo', isRepo, e)
+    if (!isRepo) git.init()
+}).env({
     GIT_AUTHOR_NAME: 'insomniatest',
     GIT_AUTHOR_EMAIL: 'insomniatest@test.net',
     GIT_COMMITTER_NAME: 'insomniatest',
     GIT_COMMITTER_EMAIL: 'insomniatest@test.net'
-  })
-  .status(console.log);
-
-const REPO = 'github.com/insomniatest/insomniatest.git';
-const USER = 'insomniatest';
-const PASS = 'ins0mniatest';
-const remote = `https://${USER}:${PASS}@${REPO}`;
-git.getRemotes(true, (_, remotes) => {
-  if (remotes.filter(rem => rem.name === 'remoteDB'))
-    git.addRemote('remoteDB', remote, console.log);
-});
-
-git.pull('remoteDB', 'master', console.log);
-fs.writeFileSync(path.join(repoDir, 'db.json'), '{"data": "saved"}');
-const dbFile = fs.readFileSync(path.join(repoDir, 'db.json'));
-console.log('readFile', dbFile.toString());
-git.add(path.join(repoDir, 'db.json'));
-git.commit('commited', console.log);
-git.push(['-u', 'remoteDB', 'master'], console.log);
-git.push('remoteDB', console.log);
+}).status(l)
+  .getRemotes(true, (_, remotes) => {
+    l('remotes ', remotes, remotes.filter(rem => rem.name === 'remoteDB').length === 0)
+    if (remotes.filter(rem => rem.name === 'remoteDB').length === 0){
+      git.addRemote('remoteDB', REPO, (...a) => l('add remote', ...a))
+      l('remoteDB added', remote)
+    }
+}).checkout('master', l)
+  .pull('remoteDB', 'master', (...a) => {
+    l(...a)
+    fs.writeFileSync(path.join(repoDir, 'db.json'), '{"data": "new"}');
+    const dbFile = fs.readFileSync(path.join(repoDir, 'db.json'));
+    l('readFile', dbFile.toString());
+})
+  .add(path.join(repoDir, 'db.json'))
+  .commit('commited', l)
+  .raw(['push'], l).exec()
+  .push(l).exec()
 
 export const START_DELAY = 1e3;
 export const PULL_PERIOD = 15e3;

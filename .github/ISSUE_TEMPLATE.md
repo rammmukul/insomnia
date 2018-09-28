@@ -8,8 +8,8 @@ Here are a few helpful tips, depending on what type of issue you are creating:
 [Question] – Ask whatever you want!
 -->
 
-- Insomnia Version: ___
-- Operating System: ___
+- Insomnia Version: \_\_\_
+- Operating System: \_\_\_
 
 ## Details
 
